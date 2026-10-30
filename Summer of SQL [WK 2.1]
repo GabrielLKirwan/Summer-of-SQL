@@ -1,0 +1,38 @@
+--Preppin Data Week 01: The Data Source Bank
+
+-- Requirements
+-- Input the data (help)
+-- Split the Transaction Code to extract the letters at the start of the transaction code. These identify the bank who processes the transaction (help)
+-- Rename the new field with the Bank code 'Bank'. 
+-- Rename the values in the Online or In-person field, Online of the 1 values and In-Person for the 2 values. 
+-- Change the date to be the day of the week (help)
+-- Different levels of detail are required in the outputs. You will need to sum up the values of the transactions in three ways (help):
+-- 1. Total Values of Transactions by each bank
+-- 2. Total Values by Bank, Day of the Week and Type of Transaction (Online or In-Person)
+-- 3. Total Values by Bank and Customer Code
+
+
+-- Techniques:
+-- 1. Splitting strings with SPLIT_PART
+-- 2. Case Statements
+-- 3. Converting strings to dates
+
+select
+split_part(transaction_code, '-',1) AS BANK
+,replace(replace( online_or_in_person,'1', 'online'),'2', 'in person') AS Online_In_Person
+,dayname(to_date(transaction_date,'DD/MM/YYYY HH:MI:SS')) AS day_of_week
+,sum(VALUE) as total_value
+from pd2023_wk01
+Group by Bank,day_of_week, Online_In_Person
+;;
+
+Select
+SPLIT_PART (transaction_code, '-', 1) as bank
+,customer_code
+,sum(value) as total_value
+from pd2023_wk01
+Group by Bank
+;;
+
+
+MONTH
