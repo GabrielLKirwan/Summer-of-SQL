@@ -1,0 +1,36 @@
+-- Preppin' Data 2023 Week 02
+--Requirements 
+-- In the Transactions table, there is a Sort Code field which contains dashes. We need to remove these so just have a 6 digit string
+-- Use the SWIFT Bank Code lookup table to bring in additional information about the SWIFT code and Check Digits of the receiving bank account
+-- Add a field for the Country Code
+      -- Hint: all these transactions take place in the UK so the Country Code should be GB
+-- Create the IBAN as above
+      -- Hint: watch out for trying to combine string fields with numeric fields - check data types
+-- Remove unnecessary fie
+
+-- Techniques:
+-- 1. Removing substrings with REPLACE()
+-- 2. Joining tables
+-- 3. Combining several columns
+
+
+SELECT
+  transaction_id,
+CONCAT
+(
+    'GB',
+    TO_VARCHAR(check_digits),
+    TO_VARCHAR(swift_code),
+    REPLACE(sort_code, '-', ''),
+    TO_VARCHAR(account_number)
+  ) AS full_account_identifier
+FROM pd2023_wk02_transactions as T
+INNER JOIN pd2023_wk02_swift_codes as S on T.bank = S.bank
+
+
+
+
+
+
+
+
