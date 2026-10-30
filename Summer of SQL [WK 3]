@@ -1,0 +1,177 @@
+--TIL_PLAYGRONERUND.CS1_DANNYS_DI
+
+--What is the total amount each customer spent at the restaurant?
+select
+    s.customer_id,
+    SUM(price) as total_price 
+from sales as S 
+inner join menu as M on S.product_id = M.product_id  
+group by customer_id;
+
+
+--How many days has each customer visited the restaurant?
+
+SELECT
+    customer_id
+    ,Count(DISTINCT order_date) as days
+FROM sales 
+group by customer_id;
+ 
+--What was the first item from the menu purchased by each customer?
+
+SELECT
+    customer_id
+    ,product_name
+    ,MIN(order_date) as first_order
+    ,ROW_NUMBER() OVER(PARTITION BY customer_id ORDER BY MIN (order_date)) rn
+FROM sales as s
+    inner join menu as m on s.product_id = m .product_id
+group by all;
+
+
+
+
+WITH CTE as (
+    SELECT
+        customer_id
+        ,product_name
+        ,MIN(order_date) as first_order
+        ,ROW_NUMBER() OVER(PARTITION BY customer_id ORDER BY MIN (order_date)) rn
+    FROM sales as s
+        inner join menu as m on s.product_id = m .product_id
+    group by all
+
+)
+SELECT* FROM CTE
+WHERE RN = 1
+
+---------------
+---------------
+;
+WITH PIVOT_PREP as (
+SELECT 
+    product_name
+    ,price 
+FROM MENU
+)
+
+SELECT 
+FROM PIVOT_PREP
+Pivot (Sum(price) for product_name IN ('sushi','ramen','curry'))
+;;
+;;
+;;
+
+---------------
+---------------
+
+WITH PIVOT_PREP as (
+SELECT 
+    product_name
+    ,price 
+FROM MENU
+)
+
+
+,PIVOTED AS (
+    SELECT 
+    "'sushi'" as sushi
+    ,"'ramen'" as ramen
+    ,"'curry'" as curry
+    FROM PIVOT_PREP
+    Pivot (Sum(price) for product_name IN (ANY ORDER BY product_name))
+)
+
+
+
+SELECT*
+FROM PIVOTED
+UNPIVOT (total_price FOR dishes IN (sushi,ramen,curry))
+
+
+
+
+
+--What is the most purchased item on the menu and how many times was it purchased by all customers?
+
+
+
+
+
+
+
+
+
+;
+
+;
+;
+--Which item was the most popular for each customer?
+
+WITH first_week_sales AS( 
+Select
+    sales.customer_id,
+    product_id,
+    order_date,
+    join_date,
+    datediff('days', join_date,order_date) as days_as_member
+FROM SALES 
+    INNER JOIN members ON sales.customer_id = members.customer_id
+    WHERE days_as_member BETWEEN 0 and 6
+),
+
+Week_one_points AS( 
+Select
+    customer_id,
+    fws.product_id,
+    order_date,
+    price * 2 as points
+from first_week_sales fws
+    INNER JOIN Menu on Menu.PRODUCT_ID = fws.PRODUCT_ID
+),
+
+not_first_week_sales AS( 
+Select
+    sales.customer_id,
+    sales.product_id,
+    order_date,
+    join_date,
+    datediff('days', join_date,order_date) as days_as_member
+FROM SALES 
+    INNER JOIN members ON sales.customer_id = members.customer_id
+    WHERE days_as_member > 6
+)
+, 
+
+points_not_first_week_sales as (
+    SELECT
+    customer_id,
+    menu.product_id,
+    order_date,
+        CASE menu.PRODUCT_ID WHEN 
+        1 THEN menu.price * 2 
+        END as Points
+FROM not_first_week_sales as nfws
+INNER JOIN MENU on nfws.product_id = menu.product_id
+)
+
+
+,
+Points as (
+Select*
+from week_one_points
+union
+SELECT* 
+from points_not_first_week_sales
+),
+
+final as (
+select
+customer_id,
+Sum(points)
+from Points
+GROUP BY customer_id
+ORDER BY customer_id
+)
+
+select * from final
